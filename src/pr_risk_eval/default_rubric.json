@@ -1,0 +1,136 @@
+{
+  "model": "typesafe/jev-1.13",
+  "endpoint": "https://openrouter.ai/api/alpha/decisions",
+  "chunk_max_chars": 12000,
+  "thresholds": {
+    "review_probability": 0.65,
+    "risk_reporting_probability": 0.35,
+    "block_probability": 0.85,
+    "minimum_confidence": 0.55,
+    "large_change_lines": 500,
+    "block_questions": ["data_loss_corruption", "irreversible_migration", "secrets_credentials", "human_approval_needed", "infra_destructive_change", "route_or_feature_removal"],
+    "security_questions": ["authz_boundary", "sensitive_data_exposure", "secrets_credentials", "security_review_needed"]
+  },
+  "impact_levels": {
+    "low": "Localized, readily reversible change with limited user or operational impact.",
+    "moderate": "Change can affect a feature or service but has ordinary review and rollback paths.",
+    "high": "Change can affect important production behavior, security, stored data, or service availability.",
+    "critical": "Change can cause broad compromise, unrecoverable loss, or an irreversible production incident."
+  },
+  "questions": [
+    {"id": "infra_destructive_change", "label": "Destructive or major infrastructure change", "category": "infrastructure", "applies_to": ["infra"], "instructions": "Does this infrastructure patch delete resources or data, remove routes, or substantially refactor production infrastructure?", "criteria": {"true": "It destroys or replaces stateful resources, removes routing or availability paths, changes foundational topology, or performs a large coordinated infrastructure refactor.", "false": "It is a small additive adjustment, routine patch or version update, bounded configuration tuning, or another readily reversible infrastructure change."}},
+    {"id": "app_extensive_change", "label": "Extensive existing-feature change", "category": "application", "applies_to": ["app"], "instructions": "Does this application patch extensively change existing user-visible or business functionality rather than make a small additive or localized change?", "criteria": {"true": "It rewrites or broadly alters established behavior, shared flows, core business rules, or several existing feature paths.", "false": "It is mostly additive, localized, mechanical, test-only, or leaves established feature behavior substantially intact."}},
+    {"id": "route_or_feature_removal", "label": "Route or established feature removal", "category": "functionality", "applies_to": ["app", "infra"], "instructions": "Does this patch remove or disable an established application feature, API route, network route, ingress path, or service endpoint?", "criteria": {"true": "An existing supported behavior or traffic path is removed, disabled, made unreachable, or replaced without a compatible transition.", "false": "No established route or feature is removed, or the change only adds behavior or preserves a compatible transition."}},
+    {"id": "dependency_upgrade_risk", "label": "Risky dependency or platform upgrade", "category": "dependency", "applies_to": ["dependency", "infra"], "instructions": "Is this version, dependency, runtime, provider, or platform change likely to be breaking or operationally risky?", "criteria": {"true": "It is a major-version jump, changes compatibility or runtime behavior, has a broad dependency surface, or needs coordinated rollout and rollback.", "false": "It is a routine patch or minor update with bounded compatibility impact and an ordinary rollback path."}},
+    {
+      "id": "authz_boundary",
+      "label": "Authentication or authorization boundary change",
+      "category": "security",
+      "applies_to": ["auth"],
+      "instructions": "Does this patch change or weaken an authentication or authorization boundary?",
+      "criteria": {
+        "true": "It changes identity verification, session handling, access checks, roles, permissions, tenancy isolation, or enforcement of who may perform an action.",
+        "false": "It does not affect identity or access-control behavior, or it only changes presentation without changing enforcement."
+      }
+    },
+    {
+      "id": "data_loss_corruption",
+      "label": "Data loss or corruption risk",
+      "category": "data",
+      "applies_to": ["data", "migration"],
+      "instructions": "Could this patch plausibly delete, overwrite, mis-associate, or corrupt persisted user or production data?",
+      "criteria": {
+        "true": "A reachable path can lose, overwrite, truncate, duplicate, mis-map, or silently corrupt stored data.",
+        "false": "Persisted data is not changed, or updates are narrowly validated and preserve existing data integrity."
+      }
+    },
+    {
+      "id": "irreversible_migration",
+      "label": "Irreversible migration",
+      "category": "data",
+      "applies_to": ["migration"],
+      "instructions": "Does this patch contain a database or storage migration that is destructive or difficult to reverse safely?",
+      "criteria": {
+        "true": "It drops or rewrites data, narrows a type, removes a column/table, or requires coordinated ordering without a safe backward-compatible rollback.",
+        "false": "There is no migration, or the migration is additive, backward compatible, and has a credible safe rollback."
+      }
+    },
+    {
+      "id": "sensitive_data_exposure",
+      "label": "Sensitive-data exposure",
+      "category": "security",
+      "applies_to": ["sensitive", "auth", "data"],
+      "instructions": "Could this patch expose sensitive data to logs, clients, unauthorized users, third parties, or broader storage scopes?",
+      "criteria": {
+        "true": "PII, credentials, payment data, tokens, private tenant data, or other sensitive values can cross an inappropriate trust boundary.",
+        "false": "No sensitive data flow changes, or access, redaction, transport, and storage controls remain appropriately scoped."
+      }
+    },
+    {
+      "id": "testing_insufficient",
+      "label": "Testing insufficient for impact",
+      "category": "quality",
+      "applies_to": ["always"],
+      "instructions": "Considering this patch and the supplied PR-level test facts, is the demonstrated testing insufficient for the likely impact?",
+      "criteria": {
+        "true": "Important changed behavior, edge cases, failure modes, migration paths, or security controls lack proportionate automated tests or stated validation.",
+        "false": "The change is low impact or the included tests and validation are proportionate to its plausible failure modes."
+      }
+    },
+    {
+      "id": "rollback_difficulty",
+      "label": "Rollback difficulty",
+      "category": "operations",
+      "applies_to": ["always"],
+      "instructions": "Would rolling back this change after deployment be difficult, unsafe, or unable to restore the prior state?",
+      "criteria": {
+        "true": "Rollback needs data repair, coordinated clients/services, manual intervention, long recovery, or cannot undo external or persisted effects.",
+        "false": "The change can be reverted or disabled through an ordinary deploy or feature-control path without lasting side effects."
+      }
+    },
+    {
+      "id": "secrets_credentials",
+      "label": "Secrets or credentials risk",
+      "category": "security",
+      "applies_to": ["always"],
+      "instructions": "Does this patch add, reveal, mishandle, or dangerously broaden access to secrets or credentials?",
+      "criteria": {
+        "true": "It includes secret material, logs or returns credentials, weakens secret storage, or broadens credential scope or lifetime unsafely.",
+        "false": "No secret material or credential-handling behavior changes, or the patch uses established secure indirection and least privilege."
+      }
+    },
+    {
+      "id": "operational_risk",
+      "label": "Operational risk",
+      "category": "operations",
+      "applies_to": ["operations", "code"],
+      "instructions": "Could this patch materially harm production availability, capacity, latency, deployability, or observability?",
+      "criteria": {
+        "true": "A plausible path causes outage, overload, retry storms, unsafe deployment, missing visibility, or a hard-to-diagnose production failure.",
+        "false": "Operational behavior is unchanged or the change has bounded failure modes, adequate safeguards, and useful visibility."
+      }
+    },
+    {
+      "id": "security_review_needed",
+      "label": "Specialist security review needed",
+      "category": "security",
+      "applies_to": ["auth", "sensitive"],
+      "instructions": "Does this patch warrant review by a security specialist before merge?",
+      "criteria": {
+        "true": "It changes a trust boundary, cryptography, authentication, authorization, input-to-execution path, sensitive-data flow, or another security-critical control.",
+        "false": "It has no meaningful security boundary impact and ordinary code review is sufficient."
+      }
+    },
+    {
+      "id": "human_approval_needed",
+      "label": "Explicit human approval needed",
+      "category": "governance",
+      "applies_to": ["always"],
+      "instructions": "Should this change require explicit human approval from an accountable owner before merge or deployment?",
+      "criteria": {
+        "true": "The change has high blast radius, destructive or irreversible effects, material compliance/security implications, or requires a coordinated operational decision.",
+        "false": "Normal peer review is proportionate and the change is reversible with bounded impact."
+      }
+    }
+  ]
+}

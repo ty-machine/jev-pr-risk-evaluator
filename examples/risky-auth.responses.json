@@ -1,0 +1,28 @@
+{
+  "responses": [
+    {
+      "id": "offline-demo-1",
+      "model": "typesafe/jev-1.13-demo-fixture",
+      "answers": {
+        "app_extensive_change": {"type": "noul", "noul": 0.84},
+        "route_or_feature_removal": {"type": "noul", "noul": 0.22},
+        "authz_boundary": {"type": "noul", "noul": 0.98},
+        "data_loss_corruption": {"type": "noul", "noul": 0.08},
+        "sensitive_data_exposure": {"type": "noul", "noul": 0.76},
+        "testing_insufficient": {"type": "noul", "noul": 0.92},
+        "rollback_difficulty": {"type": "noul", "noul": 0.18},
+        "secrets_credentials": {"type": "noul", "noul": 0.12},
+        "operational_risk": {"type": "noul", "noul": 0.36},
+        "security_review_needed": {"type": "noul", "noul": 0.99},
+        "human_approval_needed": {"type": "noul", "noul": 0.78},
+        "impact_level": {
+          "type": "choice",
+          "choice": "high",
+          "probabilities": {"low": 0.01, "moderate": 0.05, "high": 0.89, "critical": 0.05},
+          "confidence": 0.91
+        }
+      },
+      "usage": {"input_tokens": 700, "output_tokens": 40, "cost": 0.000031}
+    }
+  ]
+}

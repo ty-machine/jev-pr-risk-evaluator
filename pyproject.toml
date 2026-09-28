@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jev-pr-risk"
+version = "0.1.0"
+description = "CLI-first pull-request risk triage with TypeSafe Jev through OpenRouter"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Jev PR Risk contributors" }]
+dependencies = []
+
+[project.scripts]
+pr-risk = "pr_risk_eval.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pr_risk_eval = ["default_rubric.json"]
